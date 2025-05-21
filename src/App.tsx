@@ -14,7 +14,7 @@ function App() {
 
     async function consumeSSE() {
       try {
-        const response = await fetch("http://localhost:5173/sse-test", {
+        const response = await fetch("/sse-test", {
           signal,
         });
         if (!response.body) return;
