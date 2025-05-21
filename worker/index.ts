@@ -5,6 +5,11 @@ export default {
     if (url.pathname === "/sse-test") {
       let intervalId: ReturnType<typeof setInterval>;
 
+      req.signal.addEventListener("abort", () => {
+        // This is never called
+        console.log("Request aborted!");
+      });
+
       const stream = new ReadableStream({
         start(controller) {
           console.log("SSE: Client connected");
@@ -29,6 +34,7 @@ export default {
         },
 
         cancel(reason) {
+          // This is never called
           console.log(
             "SSE: Client disconnected (stream cancelled). Reason:",
             reason
