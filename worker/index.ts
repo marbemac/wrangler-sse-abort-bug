@@ -1,12 +1,51 @@
 export default {
-  fetch(request) {
-    const url = new URL(request.url);
+  fetch(req) {
+    const url = new URL(req.url);
 
-    if (url.pathname.startsWith("/api/")) {
-      return Response.json({
-        name: "Cloudflare",
+    if (url.pathname === "/sse-test") {
+      let intervalId: ReturnType<typeof setInterval>;
+
+      const stream = new ReadableStream({
+        start(controller) {
+          console.log("SSE: Client connected");
+
+          intervalId = setInterval(() => {
+            const message = `data: ${new Date().toISOString()}\n\n`;
+            try {
+              controller.enqueue(new TextEncoder().encode(message));
+            } catch (e) {
+              // This catch is a fallback, primary disconnect detection is via 'cancel'
+              console.error("SSE: Error enqueuing data:", e);
+              clearInterval(intervalId);
+
+              // Attempt to close if not already closed by 'cancel'
+              try {
+                controller.close();
+              } catch {
+                console.error("SSE: Error closing stream:", e);
+              }
+            }
+          }, 1000);
+        },
+
+        cancel(reason) {
+          console.log(
+            "SSE: Client disconnected (stream cancelled). Reason:",
+            reason
+          );
+          clearInterval(intervalId);
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
       });
     }
-		return new Response(null, { status: 404 });
+
+    return new Response("Not found", { status: 404 });
   },
 } satisfies ExportedHandler<Env>;
