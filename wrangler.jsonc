@@ -6,14 +6,38 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "wrangler-sse-abort-bug",
   "main": "worker/index.ts",
-  "compatibility_date": "2025-05-21",
+  "compatibility_date": "2025-08-08",
   "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
   "assets": {
-    "not_found_handling": "single-page-application"
+    "directory": "./dist/",
+    "binding": "ASSETS",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/debug/*"]
   },
   "observability": {
     "enabled": true
-  }
+  },
+  "kv_namespaces": [
+    {
+      "binding": "ACTOR_KV",
+      "id": "your_namespace_id"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "AgentDO",
+        "name": "AgentDO"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "new_sqlite_classes": ["ActorHandler"],
+      "tag": "v1"
+    }
+  ]
   /**
    * Smart Placement
    * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

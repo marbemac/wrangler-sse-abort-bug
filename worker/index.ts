@@ -1,57 +1,47 @@
+import { actor, setup } from "@rivetkit/actor";
+import { createServer } from "@rivetkit/cloudflare-workers";
+import type { Join } from "type-fest";
+
+type OrgId = string;
+type UserId = string;
+
+export type AgentNameParts = [OrgId, UserId];
+export type AgentName = Join<AgentNameParts, ":">;
+
+export const makeUserActor = async (nameParts: AgentNameParts) => {
+  return client.user.getOrCreate(nameParts.join(":"));
+};
+
+export const user = actor({
+  state: { count: 0 },
+  actions: {
+    getCount: (c) => c.state.count,
+    increment: (c, amount: number = 1) => {
+      console.log("actorName", c.name);
+      c.state.count += amount;
+      c.broadcast("countChanged", c.state.count);
+      return c.state.count;
+    },
+  },
+});
+
+const registry = setup({
+  use: { user },
+});
+
+const { client } = createServer(registry);
+
 export default {
-  fetch(req) {
+  async fetch(req) {
     const url = new URL(req.url);
 
-    if (url.pathname === "/sse-test") {
-      let intervalId: ReturnType<typeof setInterval>;
+    if (url.pathname === "/debug/actor") {
+      const user = await makeUserActor(["org_1", "ag_1"]);
 
-      req.signal.addEventListener("abort", () => {
-        // This is never called
-        console.log("Request aborted!");
-      });
+      await user.increment(1);
+      const newCount = await user.getCount();
 
-      const stream = new ReadableStream({
-        start(controller) {
-          console.log("SSE: Client connected");
-
-          intervalId = setInterval(() => {
-            const message = `data: ${new Date().toISOString()}\n\n`;
-            try {
-              console.log("SSE: Enqueuing data", message);
-              controller.enqueue(new TextEncoder().encode(message));
-            } catch (e) {
-              // This catch is a fallback, primary disconnect detection is via 'cancel'
-              console.error("SSE: Error enqueuing data:", e);
-              clearInterval(intervalId);
-
-              // Attempt to close if not already closed by 'cancel'
-              try {
-                console.log("SSE: attempting manual close");
-                controller.close();
-              } catch {
-                console.error("SSE: Error closing stream:", e);
-              }
-            }
-          }, 1000);
-        },
-
-        cancel(reason) {
-          // This is never called
-          console.log(
-            "SSE: Client disconnected (stream cancelled). Reason:",
-            reason
-          );
-          clearInterval(intervalId);
-        },
-      });
-
-      return new Response(stream, {
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
-      });
+      return new Response(`new count ${newCount}`);
     }
 
     return new Response("Not found", { status: 404 });
