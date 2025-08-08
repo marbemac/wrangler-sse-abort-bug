@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@rivetkit/actor": "0.9.8",
-    "@rivetkit/cloudflare-workers": "0.9.8",
+    "@rivetkit/cloudflare-workers": "https://pkg.pr.new/rivet-gg/rivetkit/@rivetkit/cloudflare-workers@1157",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },

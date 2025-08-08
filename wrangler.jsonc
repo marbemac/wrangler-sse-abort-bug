@@ -27,8 +27,8 @@
   "durable_objects": {
     "bindings": [
       {
-        "class_name": "AgentDO",
-        "name": "AgentDO"
+        "class_name": "ActorHandler",
+        "name": "ACTOR_DO"
       }
     ]
   },
