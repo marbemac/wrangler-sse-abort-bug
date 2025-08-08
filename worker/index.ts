@@ -45,9 +45,9 @@ const { client, createHandler } = createServer(registry, {
   studio: {
     defaultEndpoint: "http://localhost:5173",
     token: () => "password",
-    cors: {
-      origin: "https://studio.rivet.gg",
-    },
+    // cors: {
+    //   origin: "https://studio.rivet.gg",
+    // },
   },
 });
 
